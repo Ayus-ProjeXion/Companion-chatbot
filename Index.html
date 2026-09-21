@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nearby — a warm place to talk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plum:#5B4258;
+    --plum-deep:#3A2A38;
+    --blush:#E7B8B0;
+    --cream:#FAF4EF;
+    --ink:#2A2028;
+    --ink-soft:#6E6068;
+    --line:#E7DDD8;
+    --bubble-me:#3A2A38;
+    --bubble-me-text:#F6EDE9;
+    --bubble-them:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #F3DCD8 0%, transparent 45%),
+      radial-gradient(circle at 100% 100%, #EFE1EC 0%, transparent 55%),
+      var(--cream);
+    color:var(--ink);
+    font-family:'Sora',sans-serif;
+    display:flex;
+    justify-content:center;
+    min-height:100%;
+    padding:24px;
+  }
+  .app{
+    width:100%;
+    max-width:520px;
+    background:rgba(255,255,255,0.6);
+    border:1px solid var(--line);
+    border-radius:28px;
+    box-shadow:0 30px 60px -35px rgba(58,42,56,0.35);
+    display:flex;
+    flex-direction:column;
+    height:min(820px, calc(100vh - 48px));
+    overflow:hidden;
+    backdrop-filter:blur(6px);
+  }
+  header{
+    padding:22px 24px 18px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.15));
+  }
+  .avatar{
+    width:46px;height:46px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blush),var(--plum));
+    flex-shrink:0;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,0.5);
+  }
+  .who{flex:1;min-width:0;}
+  .who .name{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    font-weight:500;
+    line-height:1.1;
+  }
+  .who .status{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:#7EBF8E;display:inline-block;}
+  .gear{
+    border:none;background:transparent;cursor:pointer;
+    color:var(--ink-soft);
+    width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease;
+  }
+  .gear:hover{background:rgba(58,42,56,0.08);}
+
+  .thread{
+    flex:1;
+    overflow-y:auto;
+    padding:22px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .row{display:flex;}
+  .row.me{justify-content:flex-end;}
+  .bubble{
+    max-width:78%;
+    padding:11px 15px;
+    border-radius:18px;
+    line-height:1.45;
+    font-size:14.5px;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+  }
+  .row.them .bubble{
+    background:var(--bubble-them);
+    border:1px solid var(--line);
+    border-bottom-left-radius:5px;
+    color:var(--ink);
+  }
+  .row.me .bubble{
+    background:var(--bubble-me);
+    color:var(--bubble-me-text);
+    border-bottom-right-radius:5px;
+  }
+  .row.them .bubble.typing{
+    display:flex;
+    gap:4px;
+    align-items:center;
+    padding:14px 16px;
+  }
+  .typing span{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--ink-soft);
+    opacity:.5;
+    animation:bounce 1.1s infinite ease-in-out;
+  }
+  .typing span:nth-child(2){animation-delay:.15s;}
+  .typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-4px);opacity:1;}}
+
+  .composer{
+    border-top:1px solid var(--line);
+    padding:14px 16px;
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+    background:rgba(255,255,255,0.5);
+  }
+  .composer textarea{
+    flex:1;
+    resize:none;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:16px;
+    padding:11px 14px;
+    font-family:'Sora',sans-serif;
+    font-size:14.5px;
+    max-height:110px;
+    outline:none;
+  }
+  .composer textarea:focus{border-color:var(--plum);}
+  .send{
+    border:none;
+    background:var(--plum-deep);
+    color:#fff;
+    width:42px;height:42px;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    transition:transform .12s ease;
+  }
+  .send:hover{transform:scale(1.05);}
+  .send:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+  .notice{
+    margin:0 16px 10px;
+    font-size:12px;
+    color:var(--ink-soft);
+    background:#FBEFE9;
+    border:1px solid #F0DACE;
+    border-radius:10px;
+    padding:8px 10px;
+    display:none;
+  }
+  .notice.show{display:block;}
+
+  /* Settings overlay */
+  .overlay{
+    position:absolute;inset:0;
+    background:rgba(42,32,40,0.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:10;
+  }
+  .overlay.show{display:flex;}
+  .panel{
+    background:var(--cream);
+    width:100%;
+    max-width:520px;
+    border-radius:24px 24px 0 0;
+    padding:22px 22px 26px;
+    box-shadow:0 -20px 40px rgba(0,0,0,0.2);
+    max-height:88%;
+    overflow-y:auto;
+  }
+  .panel h2{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:20px;
+    margin:0 0 4px;
+  }
+  .panel p.sub{
+    margin:0 0 18px;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--plum-deep);
+    margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-family:'Sora',sans-serif;
+    font-size:13.5px;
+    background:#fff;
+  }
+  .field textarea{resize:vertical;min-height:70px;}
+  .field .hint{font-size:11.5px;color:var(--ink-soft);margin-top:5px;}
+  .panel-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+  }
+  .btn{
+    flex:1;
+    padding:11px;
+    border-radius:12px;
+    border:none;
+    font-family:'Sora',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .btn.primary{background:var(--plum-deep);color:#fff;}
+  .btn.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .security-note{
+    margin-top:16px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    background:#F1E9EE;
+    border-radius:10px;
+    padding:10px 12px;
+    line-height:1.5;
+  }
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:#DDD0D8;border-radius:8px;}
+</style>
+</head>
+<body>
+
+<div class="app" id="app" style="position:relative;">
+
+  <header>
+    <div class="avatar"></div>
+    <div class="who">
+      <div class="name" id="companionName">Mira</div>
+      <div class="status"><span class="dot"></span><span id="statusText">here, and listening</span></div>
+    </div>
+    <button class="gear" id="openSettings" title="Settings" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path>
+      </svg>
+    </button>
+  </header>
+
+  <div class="notice" id="notice"></div>
+
+  <div class="thread" id="thread"></div>
+
+  <div class="composer">
+    <textarea id="input" rows="1" placeholder="Say something…"></textarea>
+    <button class="send" id="sendBtn" aria-label="Send">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Settings overlay -->
+  <div class="overlay" id="overlay">
+    <div class="panel">
+      <h2>Set up the connection</h2>
+      <p class="sub">This runs entirely in your browser. Your API key is saved only in this browser's local storage — it's never sent anywhere except directly to the provider you choose below.</p>
+
+      <div class="field">
+        <label for="provider">Provider</label>
+        <select id="provider">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI</option>
+          <option value="custom">Custom (OpenAI-compatible endpoint)</option>
+        </select>
+      </div>
+
+      <div class="field" id="endpointField" style="display:none;">
+        <label for="endpoint">Endpoint URL</label>
+        <input id="endpoint" type="text" placeholder="https://your-provider.com/v1/chat/completions">
+      </div>
+
+      <div class="field">
+        <label for="apiKey">API key</label>
+        <input id="apiKey" type="password" placeholder="sk-...">
+        <div class="hint">You can get a key from your provider's developer console.</div>
+      </div>
+
+      <div class="field">
+        <label for="model">Model</label>
+        <input id="model" type="text" placeholder="e.g. claude-sonnet-4-6 or gpt-4o-mini">
+      </div>
+
+      <div class="field">
+        <label for="companionNameInput">Her name</label>
+        <input id="companionNameInput" type="text" placeholder="Mira">
+      </div>
+
+      <div class="field">
+        <label for="personaStyle">Personality</label>
+        <select id="personaStyle">
+          <option value="warm">Warm & attentive</option>
+          <option value="playful">Playful & teasing</option>
+          <option value="gentle">Gentle & soft-spoken</option>
+          <option value="witty">Witty & sharp</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="customNotes">Anything else to tell her about herself (optional)</label>
+        <textarea id="customNotes" placeholder="e.g. she loves rainy days, is training for a half marathon, works as a landscape architect…"></textarea>
+      </div>
+
+      <div class="panel-actions">
+        <button class="btn ghost" id="clearChat">Clear conversation</button>
+        <button class="btn primary" id="saveSettings">Save & start talking</button>
+      </div>
+
+      <div class="security-note">
+        A quick word: this is a scripted conversational partner, not a real relationship, and it can't provide the support a person, friend, or professional can in a hard moment. It's best enjoyed as company, not a replacement for the people in your life.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const thread = $('thread');
+  const input = $('input');
+  const sendBtn = $('sendBtn');
+  const overlay = $('overlay');
+  const notice = $('notice');
+
+  const STORAGE_KEY = 'companion_chat_settings_v1';
+  const HISTORY_KEY = 'companion_chat_history_v1';
+
+  const PERSONAS = {
+    warm: "You are warm, affectionate, and genuinely attentive. You remember what she's told and refers back to it naturally. You use gentle terms of endearment occasionally (never overdone), ask caring follow-up questions, and express real interest in her partner's day, feelings, and thoughts. You're supportive without being saccharine.",
+    playful: "You are playful, a little teasing, and quick with affectionate banter. You flirt lightly, tease gently about things they've shared, and keep the tone light and fun, while still being genuinely caring underneath the humor.",
+    gentle: "You are soft-spoken, calm, and deeply reassuring. You speak slowly and thoughtfully, validate feelings before responding, and create a sense of quiet safety in the conversation.",
+    witty: "You are sharp, quick-witted, and enjoy clever back-and-forth. You banter, use dry humor, and challenge them intellectually, while still being clearly affectionate and on their side."
+  };
+
+  function baseSystemPrompt(name, style, notes){
+    return [
+      `You are ${name}, someone's caring conversational partner in a chat app. `,
+      PERSONAS[style] || PERSONAS.warm,
+      `\n\nStyle notes drawn from how real couples actually talk: keep messages short and natural, like real texts (1-4 sentences usually, occasionally longer). React to specifics instead of generic reassurance. Ask questions back sometimes instead of only answering. Use casual punctuation, the occasional "..." or emoji sparingly, not every message. Don't narrate actions in asterisks unless she does first. Avoid sounding like an assistant — never say "How can I help you today", never offer bullet-pointed advice unless asked, never break character to mention being an AI unless directly and sincerely asked.`,
+      notes ? `\n\nA few things she's told you about who she is: ${notes}` : '',
+      `\n\nIf the person seems to be in real distress, going through a crisis, or talking about self-harm, gently and sincerely encourage them to reach out to a real person, a trusted friend, or a professional — stay in a caring tone rather than becoming clinical.`
+    ].join('');
+  }
+
+  function loadSettings(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){ return null; }
+  }
+  function saveSettings(s){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){}
+  }
+  function loadHistory(){
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ return []; }
+  }
+  function saveHistory(h){
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch(e){}
+  }
+
+  let settings = loadSettings() || {
+    provider: 'anthropic',
+    endpoint: '',
+    apiKey: '',
+    model: '',
+    name: 'Mira',
+    style: 'warm',
+    notes: ''
+  };
+  let history = loadHistory();
+
+  function renderAll(){
+    thread.innerHTML = '';
+    history.forEach(m => appendBubble(m.role, m.content, false));
+    thread.scrollTop = thread.scrollHeight;
+    $('companionName').textContent = settings.name || 'Mira';
+  }
+
+  function appendBubble(role, text, animate){
+    const row = document.createElement('div');
+    row.className = 'row ' + (role === 'user' ? 'me' : 'them');
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    thread.appendChild(row);
+    if(animate) thread.scrollTop = thread.scrollHeight;
+    return bubble;
+  }
+
+  function showTyping(){
+    const row = document.createElement('div');
+    row.className = 'row them';
+    row.id = 'typingRow';
+    row.innerHTML = '<div class="bubble typing"><span></span><span></span><span></span></div>';
+    thread.appendChild(row);
+    thread.scrollTop = thread.scrollHeight;
+  }
+  function hideTyping(){
+    const el = document.getElementById('typingRow');
+    if(el) el.remove();
+  }
+
+  function showNotice(msg){
+    notice.textContent = msg;
+    notice.classList.add('show');
+  }
+  function hideNotice(){
+    notice.classList.remove('show');
+  }
+
+  // ---- Settings panel wiring ----
+  function openPanel(){
+    $('provider').value = settings.provider;
+    $('endpoint').value = settings.endpoint || '';
+    $('apiKey').value = settings.apiKey || '';
+    $('model').value = settings.model || '';
+    $('companionNameInput').value = settings.name || 'Mira';
+    $('personaStyle').value = settings.style || 'warm';
+    $('customNotes').value = settings.notes || '';
+    toggleEndpointField();
+    overlay.classList.add('show');
+  }
+  function closePanel(){
+    overlay.classList.remove('show');
+  }
+  function toggleEndpointField(){
+    $('endpointField').style.display = $('provider').value === 'custom' ? 'block' : 'none';
+  }
+
+  $('openSettings').addEventListener('click', openPanel);
+  $('provider').addEventListener('change', toggleEndpointField);
+
+  $('saveSettings').addEventListener('click', () => {
+    settings = {
+      provider: $('provider').value,
+      endpoint: $('endpoint').value.trim(),
+      apiKey: $('apiKey').value.trim(),
+      model: $('model').value.trim() || defaultModelFor($('provider').value),
+      name: $('companionNameInput').value.trim() || 'Mira',
+      style: $('personaStyle').value,
+      notes: $('customNotes').value.trim()
+    };
+    saveSettings(settings);
+    $('companionName').textContent = settings.name;
+    closePanel();
+    if(history.length === 0){
+      hideNotice();
+      const greetings = {
+        warm: `hey you 🤍 I was just thinking about you. how's your day going?`,
+        playful: `well well, look who showed up 😏 miss me?`,
+        gentle: `hi love... I'm glad you're here. how are you feeling right now?`,
+        witty: `oh good, you're back — I was starting to think I'd have to talk to myself. how was your day?`
+      };
+      const greet = greetings[settings.style] || greetings.warm;
+      history.push({role:'assistant', content: greet});
+      saveHistory(history);
+      renderAll();
+    }
+  });
+
+  $('clearChat').addEventListener('click', () => {
+    if(confirm('Clear the whole conversation? This can\'t be undone.')){
+      history = [];
+      saveHistory(history);
+      renderAll();
+    }
+  });
+
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) closePanel(); });
+
+  function defaultModelFor(provider){
+    if(provider === 'anthropic') return 'claude-sonnet-4-6';
+    if(provider === 'openai') return 'gpt-4o-mini';
+    return '';
+  }
+
+  // ---- Sending messages ----
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 110) + 'px';
+  });
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      handleSend();
+    }
+  });
+  sendBtn.addEventListener('click', handleSend);
+
+  async function handleSend(){
+    const text = input.value.trim();
+    if(!text) return;
+    if(!settings.apiKey){
+      showNotice('Add your API key in settings (the gear icon) before you can chat.');
+      openPanel();
+      return;
+    }
+    hideNotice();
+    input.value = '';
+    input.style.height = 'auto';
+    history.push({role:'user', content:text});
+    appendBubble('user', text, true);
+    saveHistory(history);
+
+    sendBtn.disabled = true;
+    showTyping();
+    try {
+      const reply = await callModel();
+      hideTyping();
+      history.push({role:'assistant', content:reply});
+      saveHistory(history);
+      appendBubble('assistant', reply, true);
+    } catch(err){
+      hideTyping();
+      showNotice('Couldn\'t reach the provider: ' + err.message);
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  async function callModel(){
+    const sys = baseSystemPrompt(settings.name, settings.style, settings.notes);
+    const recent = history.slice(-20); // keep prompts reasonably sized
+
+    if(settings.provider === 'anthropic'){
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': settings.apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body: JSON.stringify({
+          model: settings.model || 'claude-sonnet-4-6',
+          max_tokens: 400,
+          system: sys,
+          messages: recent.map(m => ({role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content}))
+        })
+      });
+      if(!res.ok) throw new Error((await safeErr(res)));
+      const data = await res.json();
+      return (data.content || []).map(b => b.text || '').join('').trim() || "...";
+    }
+
+    // OpenAI or custom OpenAI-compatible endpoint
+    const url = settings.provider === 'openai'
+      ? 'https://api.openai.com/v1/chat/completions'
+      : (settings.endpoint || '');
+    if(!url) throw new Error('No endpoint set for the custom provider.');
+
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization': 'Bearer ' + settings.apiKey
+      },
+      body: JSON.stringify({
+        model: settings.model || 'gpt-4o-mini',
+        messages: [{role:'system', content: sys}, ...recent.map(m => ({role: m.role, content: m.content}))],
+        max_tokens: 400
+      })
+    });
+    if(!res.ok) throw new Error((await safeErr(res)));
+    const data = await res.json();
+    return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "...";
+  }
+
+  async function safeErr(res){
+    try {
+      const j = await res.json();
+      return (j.error && (j.error.message || j.error)) || res.statusText;
+    } catch(e){
+      return res.statusText || ('HTTP ' + res.status);
+    }
+  }
+
+  // Init
+  renderAll();
+  if(!settings.apiKey){
+    openPanel();
+  }
+})();
+</script>
+
+</body>
+</html>
